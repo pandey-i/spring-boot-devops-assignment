@@ -28,50 +28,76 @@ docker run -p 9191:9191 product-service
 
 The application can be deployed to a Kubernetes cluster using Helm charts.
 
-1.  **Prerequisites:**
-    *   A running Kubernetes cluster (e.g., Minikube, Docker Desktop).
-    *   `kubectl` configured to connect to your cluster.
-    *   [Helm](https://helm.sh/) installed.
-    *   An Ingress controller (e.g., NGINX) installed in your cluster.
+### Prerequisites
+- A running Kubernetes cluster (e.g., Docker Desktop, Minikube)
+- `kubectl` configured to connect to your cluster
+- [Helm](https://helm.sh/) installed
+- An NGINX Ingress controller installed in your cluster
 
-2.  **Deployment:**
+### Deployment
 
-    Deploy each version using Helm (replace `<docker-hub-username>` with your Docker Hub username if needed):
+Deploy each version using Helm (replace `<docker-hub-username>` with your Docker Hub username if needed):
 
-    ```sh
-    # Deploy v1.0.0
-    helm install v1 ./product-service-chart \
-      --set app.versionLabel=v1 \
-      --set app.namespace=v1 \
-      --set image.tag=v1.0.0 \
-      --namespace v1 \
-      --create-namespace
+```sh
+# Deploy v1.0.0
+helm upgrade --install product-v1 ./product-service-chart \
+  -n v1 --create-namespace \
+  --set app.versionLabel=v1 --set app.namespace=v1 --set image.tag="v1.0.0"
 
-    # Deploy v1.1.0
-    helm install v1-1 ./product-service-chart \
-      --set app.versionLabel=v1-1 \
-      --set app.namespace=v1-1 \
-      --set image.tag=v1.1.0 \
-      --namespace v1-1 \
-      --create-namespace
+# Deploy v1.1.0
+helm upgrade --install product-v1-1 ./product-service-chart \
+  -n v1-1 --create-namespace \
+  --set app.versionLabel=v1-1 --set app.namespace=v1-1 --set image.tag="v1.1.0"
 
-    # Deploy v2.0.0
-    helm install v2 ./product-service-chart \
-      --set app.versionLabel=v2 \
-      --set app.namespace=v2 \
-      --set image.tag=v2.0.0 \
-      --namespace v2 \
-      --create-namespace
-    ```
+# Deploy v2.0.0
+helm upgrade --install product-v2 ./product-service-chart \
+  -n v2 --create-namespace \
+  --set app.versionLabel=v2 --set app.namespace=v2 --set image.tag="v2.0.0"
+```
 
-    > **Note:** If you get an error about resources already existing, delete the namespace or resource before re-installing.
+> **Note:** If you get an error about resources already existing, delete the namespace or resource before re-installing.
 
-3.  **Accessing the Service:**
+### Ingress and Path Routing
 
-    Find the external IP of your Ingress controller and access the services at the following paths:
-    *   `http://<ingress-ip>/v1/products`
-    *   `http://<ingress-ip>/v1.1/products`
-    *   `http://<ingress-ip>/v2/products`
+The NGINX Ingress controller is configured with regex paths and rewrite rules to support versioned routing:
+- `/v1/products` → v1 namespace
+- `/v1-1/products` → v1-1 namespace
+- `/v2/products` → v2 namespace
+
+The Ingress template uses:
+```yaml
+- path: /{{ .Values.app.versionLabel }}(/|$)(.*)
+  pathType: ImplementationSpecific
+  backend:
+    service:
+      name: {{ .Values.app.name }}-{{ .Values.app.versionLabel }}
+      port:
+        number: {{ .Values.service.port }}
+```
+With annotation:
+```yaml
+nginx.ingress.kubernetes.io/rewrite-target: /$2
+```
+
+### Accessing the Service
+
+Access the services at the following paths (assuming Ingress is on localhost):
+- http://localhost/v1/products
+- http://localhost/v1-1/products
+- http://localhost/v2/products
+
+### Troubleshooting
+
+- **404 Not Found (nginx):**
+  - Check that the Ingress path and rewrite annotation are correct.
+  - Make sure the Ingress is in the same namespace as the service.
+  - Try both with and without a trailing slash.
+- **502 Bad Gateway (nginx):**
+  - Check that pods are running and READY.
+  - Check service endpoints: `kubectl get endpoints -n <namespace>`
+  - Check pod logs for errors or OOMKilled status.
+- **503 Service Unavailable (nginx):**
+  - No healthy endpoints for the service (pods not ready or service selector mismatch).
 
 ## CI/CD Pipeline
 
