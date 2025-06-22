@@ -1,0 +1,59 @@
+# Default values for product-service-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- App-specific configuration
+app:
+  # -- The name of the application, used for labels and resource names
+  name: product-service
+  # -- The version label for the release (e.g., v1, v1-1, v2)
+  versionLabel: v1
+  # -- The namespace to deploy into.
+  namespace: v1
+
+# -- Docker image configuration
+image:
+  # -- The Docker image repository
+  repository: aman736/product-service
+  # -- The image tag to deploy
+  tag: "v1.0.0"
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+
+# -- Deployment configuration
+deployment:
+  # -- Number of replicas for the deployment
+  replicaCount: 3
+
+# -- Service configuration
+service:
+  # -- The service type
+  type: ClusterIP
+  # -- The service port
+  port: 80
+  # -- The target port on the container
+  targetPort: 9191
+
+# -- Autoscaling configuration
+hpa:
+  # -- Enable or disable the HorizontalPodAutoscaler
+  enabled: true
+  # -- Minimum number of replicas
+  minReplicas: 3
+  # -- Maximum number of replicas
+  maxReplicas: 5
+  # -- Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 50
+
+# -- Resource allocation for the container
+resources:
+  # -- We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: "0.5"
+    memory: "512Mi"
+  requests:
+    cpu: "0.2"
+    memory: "256Mi" 

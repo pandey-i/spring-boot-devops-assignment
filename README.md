@@ -24,35 +24,47 @@ docker build -t product-service .
 docker run -p 9191:9191 product-service
 ```
 
-## Kubernetes Deployment
+## Kubernetes Deployment (with Helm)
 
-The application can be deployed to a Kubernetes cluster using the provided manifests.
+The application can be deployed to a Kubernetes cluster using Helm charts.
 
 1.  **Prerequisites:**
     *   A running Kubernetes cluster (e.g., Minikube, Docker Desktop).
     *   `kubectl` configured to connect to your cluster.
+    *   [Helm](https://helm.sh/) installed.
     *   An Ingress controller (e.g., NGINX) installed in your cluster.
 
 2.  **Deployment:**
 
-    Apply the manifests for each version of the microservice:
+    Deploy each version using Helm (replace `<docker-hub-username>` with your Docker Hub username if needed):
 
-    ```bash
-    # Deploy v1.0
-    kubectl apply -f k8s/v1-deployment.yaml
-    kubectl apply -f k8s/v1-hpa.yaml
+    ```sh
+    # Deploy v1.0.0
+    helm install v1 ./product-service-chart \
+      --set app.versionLabel=v1 \
+      --set app.namespace=v1 \
+      --set image.tag=v1.0.0 \
+      --namespace v1 \
+      --create-namespace
 
-    # Deploy v1.1
-    kubectl apply -f k8s/v1.1-deployment.yaml
-    kubectl apply -f k8s/v1.1-hpa.yaml
+    # Deploy v1.1.0
+    helm install v1-1 ./product-service-chart \
+      --set app.versionLabel=v1-1 \
+      --set app.namespace=v1-1 \
+      --set image.tag=v1.1.0 \
+      --namespace v1-1 \
+      --create-namespace
 
-    # Deploy v2.0
-    kubectl apply -f k8s/v2-deployment.yaml
-    kubectl apply -f k8s/v2-hpa.yaml
-
-    # Deploy the Ingress
-    kubectl apply -f k8s/ingress.yaml
+    # Deploy v2.0.0
+    helm install v2 ./product-service-chart \
+      --set app.versionLabel=v2 \
+      --set app.namespace=v2 \
+      --set image.tag=v2.0.0 \
+      --namespace v2 \
+      --create-namespace
     ```
+
+    > **Note:** If you get an error about resources already existing, delete the namespace or resource before re-installing.
 
 3.  **Accessing the Service:**
 
@@ -67,7 +79,7 @@ This project uses GitHub Actions for CI/CD. The pipeline is defined in `.github/
 
 1.  **Build:** Builds the application and runs tests on every push to `main`.
 2.  **Build and Push Docker Image:** Builds and pushes a Docker image to Docker Hub when a new tag is pushed.
-3.  **Deploy to Kubernetes:** Deploys the new image to Kubernetes when a new tag is pushed.
+3.  **Deploy to Kubernetes (with Helm):** Deploys the new image to Kubernetes using Helm when a new tag is pushed.
 
 ### Secrets
 

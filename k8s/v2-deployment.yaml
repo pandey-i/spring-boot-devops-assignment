@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: product-service
-        image: DOCKER_HUB_USERNAME/product-service:v2.0.0
+        image: aman736/product-service:v2.0.0
         ports:
         - containerPort: 9191
         resources:

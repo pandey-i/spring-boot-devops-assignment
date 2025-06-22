@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.app.name }}-{{ .Values.app.versionLabel }}
+  namespace: {{ .Values.app.namespace }}
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.app.name }}-{{ .Values.app.versionLabel }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app.name }}-{{ .Values.app.versionLabel }}
+    spec:
+      containers:
+      - name: {{ .Values.app.name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.service.targetPort }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.service.targetPort }}
+          initialDelaySeconds: 60
+          periodSeconds: 10 

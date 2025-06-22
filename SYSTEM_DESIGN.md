@@ -12,16 +12,17 @@ The system is designed as a microservice architecture, with the product catalogu
 -   **H2 Database:** An in-memory database used for storing product data. This was chosen to simplify the development and containerization process, as it removes the need for an external database.
 -   **Docker:** Used for containerizing the application, ensuring a consistent and portable runtime environment.
 -   **Kubernetes:** Used for orchestrating the deployment, scaling, and management of the containerized application.
+-   **Helm:** Used for templating and managing Kubernetes resources, enabling versioned, repeatable, and parameterized deployments.
 -   **NGINX Ingress Controller:** Used for routing external traffic to the different versions of the microservice based on the URL path.
 -   **GitHub Actions:** Used for automating the CI/CD pipeline, from building and testing to deploying the application.
 
 ### Versioning
 
-The microservice is versioned using semantic versioning. Each version is deployed in a separate Kubernetes namespace to ensure isolation. The Ingress controller routes traffic to the appropriate version based on the URL path (`/v1`, `/v1.1`, `/v2`).
+The microservice is versioned using semantic versioning. Each version is deployed as a separate Helm release in its own Kubernetes namespace to ensure isolation. The Ingress controller routes traffic to the appropriate version based on the URL path (`/v1`, `/v1.1`, `/v2`).
 
 ### Scalability
 
-The system is designed to be scalable. The microservice is deployed as a set of replicated pods in Kubernetes. A Horizontal Pod Autoscaler (HPA) is used to automatically scale the number of pods based on CPU utilization.
+The system is designed to be scalable. Helm charts template the deployment and Horizontal Pod Autoscaler (HPA) resources, allowing for easy adjustment of scaling policies per version.
 
 ### Security
 
