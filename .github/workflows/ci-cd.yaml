@@ -71,21 +71,22 @@ jobs:
     - name: Check Helm version
       run: helm version
     - name: Deploy to Kubernetes with Helm
+      shell: powershell
       run: |
-        TAG=${{ steps.tag.outputs.TAG }}
-        NAMESPACE=""
-        RELEASE=""
-        if [[ "$TAG" == "v1.0.0" ]]; then
-          NAMESPACE="v1"
-          RELEASE="product-v1"
-        elif [[ "$TAG" == "v1.1.0" || "$TAG" == "v1-1.0" ]]; then
-          NAMESPACE="v1-1"
-          RELEASE="product-v1-1"
-        elif [[ "$TAG" == "v2.0.0" ]]; then
-          NAMESPACE="v2"
-          RELEASE="product-v2"
-        fi
-        helm upgrade --install $RELEASE ./product-service-chart \
-          --namespace $NAMESPACE --create-namespace \
-          --set image.tag=$TAG \
+        $TAG = "${{ steps.tag.outputs.TAG }}"
+        $NAMESPACE = ""
+        $RELEASE = ""
+        if ($TAG -eq "v1.0.0") {
+          $NAMESPACE = "v1"
+          $RELEASE = "product-v1"
+        } elseif ($TAG -eq "v1.1.0" -or $TAG -eq "v1-1.0") {
+          $NAMESPACE = "v1-1"
+          $RELEASE = "product-v1-1"
+        } elseif ($TAG -eq "v2.0.0") {
+          $NAMESPACE = "v2"
+          $RELEASE = "product-v2"
+        }
+        helm upgrade --install $RELEASE ./product-service-chart `
+          --namespace $NAMESPACE --create-namespace `
+          --set image.tag=$TAG `
           --set app.namespace=$NAMESPACE 
