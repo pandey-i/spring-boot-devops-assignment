@@ -31,7 +31,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Get tag
       id: tag
-      run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/}
+      run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
     - name: Login to DockerHub
@@ -55,11 +55,12 @@ jobs:
     - uses: actions/checkout@v2
     - name: Get tag
       id: tag
-      run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/}
+      run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
     - name: Set Kubeconfig
-      uses: ahmadnassri/action-kubeconfig@v2.2.0
-      with:
-        kubeconfig: ${{ secrets.KUBECONFIG }}
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+        export KUBECONFIG=$HOME/.kube/config
     - name: Deploy to Kubernetes
       run: |
         TAG=${{ steps.tag.outputs.TAG }}
