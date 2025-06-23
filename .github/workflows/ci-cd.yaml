@@ -57,10 +57,11 @@ jobs:
       id: tag
       run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
     - name: Set Kubeconfig
+      shell: pwsh
       run: |
-        mkdir -p $HOME/.kube
-        echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
-        export KUBECONFIG=$HOME/.kube/config
+        New-Item -ItemType Directory -Force -Path $env:USERPROFILE\.kube
+        Set-Content -Path $env:USERPROFILE\.kube\config -Value "${{ secrets.KUBECONFIG }}"
+        $env:KUBECONFIG = \"$env:USERPROFILE\\.kube\\config\"
     - name: Install Helm
       run: |
         curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
