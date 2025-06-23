@@ -48,7 +48,7 @@ jobs:
         tags: ${{ secrets.DOCKER_HUB_USERNAME }}/product-service:${{ steps.tag.outputs.TAG }}
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build-and-push
     if: startsWith(github.ref, 'refs/tags/')
     steps:
@@ -61,23 +61,27 @@ jobs:
         mkdir -p $HOME/.kube
         echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
         export KUBECONFIG=$HOME/.kube/config
-    - name: Deploy to Kubernetes
+    - name: Install Helm
+      run: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    - name: Check Helm version
+      run: helm version
+    - name: Deploy to Kubernetes with Helm
       run: |
         TAG=${{ steps.tag.outputs.TAG }}
         NAMESPACE=""
+        RELEASE=""
         if [[ "$TAG" == "v1.0.0" ]]; then
           NAMESPACE="v1"
-          FILE="v1-deployment.yaml"
-        elif [[ "$TAG" == "v1.1.0" ]]; then
+          RELEASE="product-v1"
+        elif [[ "$TAG" == "v1.1.0" || "$TAG" == "v1-1.0" ]]; then
           NAMESPACE="v1-1"
-          FILE="v1.1-deployment.yaml"
+          RELEASE="product-v1-1"
         elif [[ "$TAG" == "v2.0.0" ]]; then
           NAMESPACE="v2"
-          FILE="v2-deployment.yaml"
+          RELEASE="product-v2"
         fi
-        sed -i "s|DOCKER_HUB_USERNAME/product-service:$TAG|${{ secrets.DOCKER_HUB_USERNAME }}/product-service:$TAG|g" k8s/$FILE
-        kubectl apply -f k8s/$FILE -n $NAMESPACE
-        kubectl apply -f k8s/v1-hpa.yaml -n v1
-        kubectl apply -f k8s/v1.1-hpa.yaml -n v1-1
-        kubectl apply -f k8s/v2-hpa.yaml -n v2
-        kubectl apply -f k8s/ingress.yaml 
+        helm upgrade --install $RELEASE ./product-service-chart \
+          --namespace $NAMESPACE --create-namespace \
+          --set image.tag=$TAG \
+          --set app.namespace=$NAMESPACE 
