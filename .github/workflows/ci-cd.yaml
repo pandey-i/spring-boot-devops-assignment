@@ -86,7 +86,12 @@ jobs:
           $NAMESPACE = "v2"
           $RELEASE = "product-v2"
         }
-        helm upgrade --install $RELEASE ./product-service-chart `
-          --namespace $NAMESPACE --create-namespace `
-          --set image.tag=$TAG `
-          --set app.namespace=$NAMESPACE 
+        if ($RELEASE -and $NAMESPACE) {
+          helm upgrade --install $RELEASE ./product-service-chart `
+            --namespace $NAMESPACE --create-namespace `
+            --set image.tag=$TAG `
+            --set app.namespace=$NAMESPACE
+        } else {
+          Write-Host "ERROR: Unknown tag '$TAG'. No deployment performed."
+          exit 1
+        } 
