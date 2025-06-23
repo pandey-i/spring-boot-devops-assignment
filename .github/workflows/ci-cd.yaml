@@ -94,4 +94,9 @@ jobs:
         } else {
           Write-Host "ERROR: Unknown tag '$TAG'. No deployment performed."
           exit 1
-        } 
+        }
+    - name: Debug GITHUB_REF and TAG
+      shell: powershell
+      run: |
+        Write-Host "GITHUB_REF: $env:GITHUB_REF"
+        Write-Host "TAG: ${{ steps.tag.outputs.TAG }}" 
