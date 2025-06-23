@@ -64,9 +64,10 @@ jobs:
         }
         Set-Content -Path $env:USERPROFILE\.kube\config -Value "${{ secrets.KUBECONFIG }}"
         $env:KUBECONFIG = "$env:USERPROFILE\.kube\config"
-    - name: Install Helm
+    - name: Install Helm (Windows)
+      shell: powershell
       run: |
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        choco install -y kubernetes-helm
     - name: Check Helm version
       run: helm version
     - name: Deploy to Kubernetes with Helm
